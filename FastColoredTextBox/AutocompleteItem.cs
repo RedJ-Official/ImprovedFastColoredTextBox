@@ -7,7 +7,7 @@ namespace FastColoredTextBoxNS
     /// <summary>
     /// Item of autocomplete menu
     /// </summary>
-    public class AutocompleteItem
+    public class AutocompleteItem : IComparable, IComparable<AutocompleteItem>
     {
         public string Text;
         public int ImageIndex = -1;
@@ -80,6 +80,34 @@ namespace FastColoredTextBoxNS
         public virtual void OnSelected(AutocompleteMenu popupMenu, SelectedEventArgs e)
         {
             ;
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (obj is null)
+            {
+                return -1;
+            }
+            else if (obj is AutocompleteItem item)
+            {
+                return this.menuText.CompareTo(item.menuText);
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        public int CompareTo(AutocompleteItem other)
+        {
+            if (other is null)
+            {
+                return -1;
+            }
+            else
+            {
+                return this.menuText.CompareTo(other.menuText);
+            }
         }
 
         /// <summary>
