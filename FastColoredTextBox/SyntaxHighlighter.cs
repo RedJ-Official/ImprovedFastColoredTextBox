@@ -1,10 +1,14 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Xml;
+
+// RegEx improved for use in RedJ Code.
 
 namespace FastColoredTextBoxNS
 {
@@ -22,6 +26,11 @@ namespace FastColoredTextBoxNS
         public readonly Style MaroonStyle = new TextStyle(Brushes.Maroon, null, FontStyle.Regular);
         public readonly Style RedStyle = new TextStyle(Brushes.Red, null, FontStyle.Regular);
         public readonly Style BlackStyle = new TextStyle(Brushes.Black, null, FontStyle.Regular);
+        public readonly Style DarkSlateGrayStyle = new TextStyle(Brushes.DarkSlateGray, null, FontStyle.Regular);
+        public readonly Style DarkCyanStyle = new TextStyle(Brushes.DarkCyan, null, FontStyle.Regular);
+        public readonly Style DarkVioletStyle = new TextStyle(Brushes.DarkViolet, null, FontStyle.Regular);
+        public readonly Style DarkBlueStyle = new TextStyle(Brushes.DarkBlue, null, FontStyle.Regular);
+        public readonly Style OrangeStyle = new TextStyle(Brushes.Orange, null, FontStyle.Regular);
         //
         protected readonly Dictionary<string, SyntaxDescriptor> descByXMLfileNames =
             new Dictionary<string, SyntaxDescriptor>();
@@ -29,38 +38,74 @@ namespace FastColoredTextBoxNS
         protected readonly List<Style> resilientStyles = new List<Style>(5);
 
         protected Regex CSharpAttributeRegex,
-                      CSharpClassNameRegex;
+                        CSharpClassNameRegex;
 
         protected Regex CSharpCommentRegex1,
-                      CSharpCommentRegex2,
-                      CSharpCommentRegex3;
+                        CSharpCommentRegex2,
+                        CSharpCommentRegex3;
+                      //CSharpCommentRegex4
 
         protected Regex CSharpKeywordRegex;
         protected Regex CSharpNumberRegex;
         protected Regex CSharpStringRegex;
+        protected Regex CSharpPreprocessorRegex; 
 
         protected Regex HTMLAttrRegex,
-                      HTMLAttrValRegex,
-                      HTMLCommentRegex1,
-                      HTMLCommentRegex2;
+                        HTMLAttrValRegex,
+                        HTMLCommentRegex1,
+                        HTMLCommentRegex2;
 
         protected Regex HTMLEndTagRegex;
 
         protected Regex HTMLEntityRegex,
-                      HTMLTagContentRegex;
+                        HTMLTagContentRegex;
 
         protected Regex HTMLTagNameRegex;
         protected Regex HTMLTagRegex;
 
+        protected string[] HTMLFoldingBlockRegexTags = new string[]
+            {
+                "html",
+                "head",
+                "body",
+                "div",
+                "header",
+                "nav",
+                "main",
+                "footer",
+                "atricle",
+                "table",
+                "thead",
+                "tbody",
+                "tfoot",
+                "tr",
+                "ul",
+                "ol",
+                "li",
+                "form",
+                "fieldset",
+                "select",
+                "optgroup",
+                "picture",
+                "audio",
+                "video",
+                "applet",
+                "dir",
+                "style",
+                "script",
+                "p",
+            };
+        protected Regex[,] HTMLFoldingBlockRegex;
+
         protected Regex XMLAttrRegex,
-                      XMLAttrValRegex,
-                      XMLCommentRegex1,
-                      XMLCommentRegex2;
+                        XMLAttrValRegex,
+                        XMLCommentRegex1,
+                        XMLCommentRegex2;
 
         protected Regex XMLEndTagRegex;
 
         protected Regex XMLEntityRegex,
-                      XMLTagContentRegex;
+                        XMLTagContentRegex;
 
         protected Regex XMLTagNameRegex;
         protected Regex XMLTagRegex;
@@ -68,20 +113,22 @@ namespace FastColoredTextBoxNS
         protected Regex XMLFoldingRegex;
 
         protected Regex JScriptCommentRegex1,
-                      JScriptCommentRegex2,
-                      JScriptCommentRegex3;
+                        JScriptCommentRegex2,
+                        JScriptCommentRegex3;
 
         protected Regex JScriptKeywordRegex;
         protected Regex JScriptNumberRegex;
         protected Regex JScriptStringRegex;
 
-        protected Regex JSONKeywordRegex;
+        protected Regex JSONKeywordRegex,
+                        JSONKeywordRegex2;
         protected Regex JSONNumberRegex;
         protected Regex JSONStringRegex;
+        protected Regex JSONValueRegex;
 
         protected Regex LuaCommentRegex1,
-                      LuaCommentRegex2,
-                      LuaCommentRegex3;
+                        LuaCommentRegex2,
+                        LuaCommentRegex3;
 
         protected Regex LuaKeywordRegex;
         protected Regex LuaNumberRegex;
@@ -89,21 +136,21 @@ namespace FastColoredTextBoxNS
         protected Regex LuaFunctionsRegex;
 
         protected Regex PHPCommentRegex1,
-                      PHPCommentRegex2,
-                      PHPCommentRegex3;
+                        PHPCommentRegex2,
+                        PHPCommentRegex3;
 
         protected Regex PHPKeywordRegex1,
-                      PHPKeywordRegex2,
-                      PHPKeywordRegex3;
+                        PHPKeywordRegex2,
+                        PHPKeywordRegex3;
 
         protected Regex PHPNumberRegex;
         protected Regex PHPStringRegex;
         protected Regex PHPVarRegex;
 
         protected Regex SQLCommentRegex1,
-                      SQLCommentRegex2,
-                      SQLCommentRegex3, 
-                      SQLCommentRegex4;
+                        SQLCommentRegex2,
+                        SQLCommentRegex3, 
+                        SQLCommentRegex4;
 
         protected Regex SQLFunctionsRegex;
         protected Regex SQLKeywordsRegex;
@@ -112,11 +159,13 @@ namespace FastColoredTextBoxNS
         protected Regex SQLStringRegex;
         protected Regex SQLTypesRegex;
         protected Regex SQLVarRegex;
+
         protected Regex VBClassNameRegex;
         protected Regex VBCommentRegex;
         protected Regex VBKeywordRegex;
         protected Regex VBNumberRegex;
         protected Regex VBStringRegex;
+        protected Regex VBPreprocessorRegex;
 
         protected FastColoredTextBox currentTb;
 
@@ -235,6 +284,9 @@ namespace FastColoredTextBoxNS
                 case Language.Lua:
                     LuaAutoIndentNeeded(sender, args);
                     break;
+                case Language.JSON:
+                    JSONAutoIndentNeeded(sender, args);
+                    break;
                 default:
                     break;
             }
@@ -299,7 +351,7 @@ namespace FastColoredTextBoxNS
             }
             //start of declaration
             if (Regex.IsMatch(args.LineText,
-                              @"\b(Class|Property|Enum|Structure|Sub|Function|Namespace|Interface|Get)\b|(Set\s*\()",
+                              @"\b(Class|Module|Property|Enum|Structure|Sub|Function|Namespace|Interface|Get)\b|(Set\s*\()",
                               RegexOptions.IgnoreCase))
             {
                 args.ShiftNextLines = args.TabLength;
@@ -566,7 +618,7 @@ namespace FastColoredTextBoxNS
             return new[] { tb.LeftBracket, tb.RightBracket, tb.LeftBracket2, tb.RightBracket2 };
         }
 
-        protected void InitCShaprRegex()
+        protected void InitCSharpRegex()
         {
             //CSharpStringRegex = new Regex( @"""""|@""""|''|@"".*?""|(?<!@)(?<range>"".*?[^\\]"")|'.*?[^\\]'", RegexCompiledOption);
 
@@ -581,7 +633,7 @@ namespace FastColoredTextBoxNS
                                 [^'\r\n]      # any character except '
                               )*
                             )
-                            '?
+                            '+
                             |
                             # Normal string & verbatim strings definitions:
                             (?<verbatimIdentifier>@)?         # this group matches if it is an verbatim string
@@ -604,21 +656,21 @@ namespace FastColoredTextBoxNS
                     RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace |
                     RegexCompiledOption
                     ); //thanks to rittergig for this regex
-
+            
             CSharpCommentRegex1 = new Regex(@"//.*$", RegexOptions.Multiline | RegexCompiledOption);
             CSharpCommentRegex2 = new Regex(@"(/\*.*?\*/)|(/\*.*)", RegexOptions.Singleline | RegexCompiledOption);
-            CSharpCommentRegex3 = new Regex(@"(/\*.*?\*/)|(.*\*/)",
-                                            RegexOptions.Singleline | RegexOptions.RightToLeft | RegexCompiledOption);
-            CSharpNumberRegex = new Regex(@"\b\d+[\.]?\d*([eE]\-?\d+)?[lLdDfF]?\b|\b0x[a-fA-F\d]+\b",
-                                          RegexCompiledOption);
+            CSharpCommentRegex3 = new Regex(@"(/\*.*?\*/)|(.*\*/)", RegexOptions.Singleline | RegexOptions.RightToLeft | RegexCompiledOption);
+            //CSharpCommentRegex4 = new Regex(@"(/\*(^[\S\s]$)*?\*/)", RegexOptions.Multiline | RegexCompiledOption);
+            //CSharpCommentRegex4 = new Regex(@"(/\*[\w\W]*\*/)", RegexOptions.Singleline | RegexCompiledOption);
+            //CSharpNumberRegex = new Regex(@"\b\d+[\.]?\d*([eE]\-?\d+)?[lLdDfFuUmM]?\b|\b0x[a-fA-F\d]+\b|\b0b[01]\b", RegexCompiledOption);
+            //CSharpNumberRegex = new Regex(@"(?:\b|(?<=\s))[\-]?(\d+[\.]?\d*([e]\-?\d+)?|0x[a-f\d]+|0b[01]+)[ldfum]?\b", RegexOptions.IgnoreCase | RegexCompiledOption);
+            CSharpNumberRegex = new Regex(@"(?:\b|(?<=\s)|^)[\-]?(\d+(\.\d*)?([e][\-]?\d+)?|0x[a-f\d]+|0b[01]+)[ldfum]?\b", RegexOptions.IgnoreCase | RegexCompiledOption);
             CSharpAttributeRegex = new Regex(@"^\s*(?<range>\[.+?\])\s*$", RegexOptions.Multiline | RegexCompiledOption);
-            CSharpClassNameRegex = new Regex(@"\b(class|struct|enum|interface)\s+(?<range>\w+?)\b", RegexCompiledOption);
-            CSharpKeywordRegex =
-                new Regex(
-                    @"\b(abstract|add|alias|as|ascending|async|await|base|bool|break|by|byte|case|catch|char|checked|class|const|continue|decimal|default|delegate|descending|do|double|dynamic|else|enum|equals|event|explicit|extern|false|finally|fixed|float|for|foreach|from|get|global|goto|group|if|implicit|in|int|interface|internal|into|is|join|let|lock|long|nameof|namespace|new|null|object|on|operator|orderby|out|override|params|partial|private|protected|public|readonly|ref|remove|return|sbyte|sealed|select|set|short|sizeof|stackalloc|static|static|string|struct|switch|this|throw|true|try|typeof|uint|ulong|unchecked|unsafe|ushort|using|using|value|var|virtual|void|volatile|when|where|while|yield)\b|#region\b|#endregion\b",
-                    RegexCompiledOption);
+            CSharpClassNameRegex = new Regex(@"\b(class|struct|enum|interface|record\s+struct|record)( )+(?<range>\w+?)\b", RegexCompiledOption);
+            CSharpKeywordRegex = new Regex(@"\b(abstract|add|alias|and|as|ascending|async|await|base|bool|break|by|byte|case|catch|char|checked|class|const|continue|decimal|default|delegate|descending|do|double|dynamic|else|enum|equals|event|explicit|extern|false|finally|fixed|float|for|foreach|from|get|global|goto|group|if|implicit|in|init|int|interface|internal|into|is|join|let|lock|long|nameof|namespace|new|nint|not|nuint|null|object|on|operator|or|orderby|out|override|params|partial|private|protected|public|readonly|record|ref|remove|return|sbyte|sealed|select|set|short|sizeof|stackalloc|static|static|string|struct|switch|this|throw|true|try|typeof|uint|ulong|unchecked|unsafe|ushort|using|using|var|virtual|void|volatile|when|where|while|with|yield)\b", RegexCompiledOption);
+            CSharpPreprocessorRegex = new Regex(@"#\s*(region|endregion|if|elif|else|endif|pragma\s+(warning\s+(restore|enable|disable)|checksum)|error|warning|nullable\s+(restore|enable|disable)|line\s+(default|hidden))\b", RegexCompiledOption);
         }
-
+ 
         public void InitStyleSchema(Language lang)
         {
             switch (lang)
@@ -626,8 +678,9 @@ namespace FastColoredTextBoxNS
                 case Language.CSharp:
                     StringStyle = BrownStyle;
                     CommentStyle = GreenStyle;
-                    NumberStyle = MagentaStyle;
-                    AttributeStyle = GreenStyle;
+                    NumberStyle = OrangeStyle;
+                    AttributeStyle = DarkSlateGrayStyle;
+                    PreprocessorStyle = DarkCyanStyle;
                     ClassNameStyle = BoldStyle;
                     KeywordStyle = BlueStyle;
                     CommentTagStyle = GrayStyle;
@@ -635,7 +688,8 @@ namespace FastColoredTextBoxNS
                 case Language.VB:
                     StringStyle = BrownStyle;
                     CommentStyle = GreenStyle;
-                    NumberStyle = MagentaStyle;
+                    NumberStyle = OrangeStyle;
+                    PreprocessorStyle = DarkCyanStyle;
                     ClassNameStyle = BoldStyle;
                     KeywordStyle = BlueStyle;
                     break;
@@ -645,7 +699,7 @@ namespace FastColoredTextBoxNS
                     TagNameStyle = MaroonStyle;
                     AttributeStyle = RedStyle;
                     AttributeValueStyle = BlueStyle;
-                    HtmlEntityStyle = RedStyle;
+                    HtmlEntityStyle = DarkSlateGrayStyle;
                     break;
                 case Language.XML:
                     CommentStyle = GreenStyle;
@@ -653,19 +707,19 @@ namespace FastColoredTextBoxNS
                     XmlTagNameStyle = MaroonStyle;
                     XmlAttributeStyle = RedStyle;
                     XmlAttributeValueStyle = BlueStyle;
-                    XmlEntityStyle = RedStyle;
-                    XmlCDataStyle = BlackStyle;
+                    XmlEntityStyle = DarkSlateGrayStyle;
+                    XmlCDataStyle = GrayStyle;
                     break;
                 case Language.JS:
                     StringStyle = BrownStyle;
                     CommentStyle = GreenStyle;
-                    NumberStyle = MagentaStyle;
+                    NumberStyle = OrangeStyle;
                     KeywordStyle = BlueStyle;
                     break;
                 case Language.Lua:
                     StringStyle = BrownStyle;
                     CommentStyle = GreenStyle;
-                    NumberStyle = MagentaStyle;
+                    NumberStyle = OrangeStyle;
                     KeywordStyle = BlueBoldStyle;
                     FunctionsStyle = MaroonStyle;
                     break;
@@ -679,19 +733,21 @@ namespace FastColoredTextBoxNS
                     KeywordStyle3 = GrayStyle;
                     break;
                 case Language.SQL:
-                    StringStyle = RedStyle;
+                    StringStyle = BrownStyle;
                     CommentStyle = GreenStyle;
-                    NumberStyle = MagentaStyle;
+                    NumberStyle = OrangeStyle;
                     KeywordStyle = BlueBoldStyle;
                     StatementsStyle = BlueBoldStyle;
                     FunctionsStyle = MaroonStyle;
                     VariableStyle = MaroonStyle;
-                    TypesStyle = BrownStyle;
+                    TypesStyle = RedStyle;
                     break;
                 case Language.JSON:
                     StringStyle = BrownStyle;
-                    NumberStyle = MagentaStyle;
+                    NumberStyle = OrangeStyle;
                     KeywordStyle = BlueStyle;
+                    KeywordStyle2 = DarkBlueStyle;
+                    VariableStyle = DarkVioletStyle;
                     break;
             }
         }
@@ -715,22 +771,25 @@ namespace FastColoredTextBoxNS
 ^\s*(case|default)\s*[^:]*(?<range>:)\s*(?<range>[^;]+);
 ";
             //clear style of changed range
-            range.ClearStyle(StringStyle, CommentStyle, NumberStyle, AttributeStyle, ClassNameStyle, KeywordStyle);
+            range.ClearStyle(StringStyle, CommentStyle, NumberStyle, AttributeStyle, ClassNameStyle, KeywordStyle, PreprocessorStyle);
             //
             if (CSharpStringRegex == null)
-                InitCShaprRegex();
+                InitCSharpRegex();
             //string highlighting
             range.SetStyle(StringStyle, CSharpStringRegex);
             //comment highlighting
             range.SetStyle(CommentStyle, CSharpCommentRegex1);
             range.SetStyle(CommentStyle, CSharpCommentRegex2);
             range.SetStyle(CommentStyle, CSharpCommentRegex3);
+            //range.SetStyle(CommentStyle, CSharpCommentRegex4);
             //number highlighting
             range.SetStyle(NumberStyle, CSharpNumberRegex);
             //attribute highlighting
-            range.SetStyle(AttributeStyle, CSharpAttributeRegex);
+            //range.SetStyle(AttributeStyle, CSharpAttributeRegex);
             //class name highlighting
             range.SetStyle(ClassNameStyle, CSharpClassNameRegex);
+            //preprocessor directives highlighting
+            range.SetStyle(PreprocessorStyle, CSharpPreprocessorRegex);
             //keyword highlighting
             range.SetStyle(KeywordStyle, CSharpKeywordRegex);
 
@@ -771,12 +830,9 @@ namespace FastColoredTextBoxNS
             VBStringRegex = new Regex(@"""""|"".*?[^\\]""", RegexCompiledOption);
             VBCommentRegex = new Regex(@"'.*$", RegexOptions.Multiline | RegexCompiledOption);
             VBNumberRegex = new Regex(@"\b\d+[\.]?\d*([eE]\-?\d+)?\b", RegexCompiledOption);
-            VBClassNameRegex = new Regex(@"\b(Class|Structure|Enum|Interface)[ ]+(?<range>\w+?)\b",
-                                         RegexOptions.IgnoreCase | RegexCompiledOption);
-            VBKeywordRegex =
-                new Regex(
-                    @"\b(AddHandler|AddressOf|Alias|And|AndAlso|As|Boolean|ByRef|Byte|ByVal|Call|Case|Catch|CBool|CByte|CChar|CDate|CDbl|CDec|Char|CInt|Class|CLng|CObj|Const|Continue|CSByte|CShort|CSng|CStr|CType|CUInt|CULng|CUShort|Date|Decimal|Declare|Default|Delegate|Dim|DirectCast|Do|Double|Each|Else|ElseIf|End|EndIf|Enum|Erase|Error|Event|Exit|False|Finally|For|Friend|Function|Get|GetType|GetXMLNamespace|Global|GoSub|GoTo|Handles|If|Implements|Imports|In|Inherits|Integer|Interface|Is|IsNot|Let|Lib|Like|Long|Loop|Me|Mod|Module|MustInherit|MustOverride|MyBase|MyClass|Namespace|Narrowing|New|Next|Not|Nothing|NotInheritable|NotOverridable|Object|Of|On|Operator|Option|Optional|Or|OrElse|Overloads|Overridable|Overrides|ParamArray|Partial|Private|Property|Protected|Public|RaiseEvent|ReadOnly|ReDim|REM|RemoveHandler|Resume|Return|SByte|Select|Set|Shadows|Shared|Short|Single|Static|Step|Stop|String|Structure|Sub|SyncLock|Then|Throw|To|True|Try|TryCast|TypeOf|UInteger|ULong|UShort|Using|Variant|Wend|When|While|Widening|With|WithEvents|WriteOnly|Xor|Region)\b|(#Const|#Else|#ElseIf|#End|#If|#Region)\b",
-                    RegexOptions.IgnoreCase | RegexCompiledOption);
+            VBClassNameRegex = new Regex(@"\b(Class|Module|Structure|Enum|Interface)[ ]+(?<range>\w+?)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
+            VBKeywordRegex = new Regex(@"\b(AddHandler|AddressOf|Alias|And|AndAlso|As|Boolean|ByRef|Byte|ByVal|Call|Case|Catch|CBool|CByte|CChar|CDate|CDbl|CDec|Char|CInt|Class|CLng|CObj|Const|Continue|CSByte|CShort|CSng|CStr|CType|CUInt|CULng|CUShort|Date|Decimal|Declare|Default|Delegate|Dim|DirectCast|Do|Double|Each|Else|ElseIf|End|EndIf|Enum|Erase|Error|Event|Exit|False|Finally|For|Friend|Function|Get|GetType|GetXMLNamespace|Global|GoSub|GoTo|Handles|If|Implements|Imports|In|Inherits|Integer|Interface|Is|IsNot|Let|Lib|Like|Long|Loop|Me|Mod|Module|MustInherit|MustOverride|MyBase|MyClass|Namespace|Narrowing|New|Next|Not|Nothing|NotInheritable|NotOverridable|Object|Of|On|Operator|Option|Optional|Or|OrElse|Overloads|Overridable|Overrides|ParamArray|Partial|Private|Property|Protected|Public|RaiseEvent|ReadOnly|ReDim|REM|RemoveHandler|Resume|Return|SByte|Select|Set|Shadows|Shared|Short|Single|Static|Step|Stop|String|Structure|Sub|SyncLock|Then|Throw|To|True|Try|TryCast|TypeOf|UInteger|ULong|UShort|Using|Variant|Wend|When|While|Widening|With|WithEvents|WriteOnly|Xor|Region)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
+            VBPreprocessorRegex = new Regex(@"#\s*(Const|Disable\s+Warning|Enable\s+Warning|If|ElseIf|Else|End\s+If|Region|End\s+Region)\b");
         }
 
         /// <summary>
@@ -808,6 +864,8 @@ namespace FastColoredTextBoxNS
             range.SetStyle(NumberStyle, VBNumberRegex);
             //class name highlighting
             range.SetStyle(ClassNameStyle, VBClassNameRegex);
+            //keyword preprocessor directives
+            range.SetStyle(PreprocessorStyle, VBPreprocessorRegex);
             //keyword highlighting
             range.SetStyle(KeywordStyle, VBKeywordRegex);
 
@@ -832,8 +890,7 @@ namespace FastColoredTextBoxNS
         protected void InitHTMLRegex()
         {
             HTMLCommentRegex1 = new Regex(@"(<!--.*?-->)|(<!--.*)", RegexOptions.Singleline | RegexCompiledOption);
-            HTMLCommentRegex2 = new Regex(@"(<!--.*?-->)|(.*-->)",
-                                          RegexOptions.Singleline | RegexOptions.RightToLeft | RegexCompiledOption);
+            HTMLCommentRegex2 = new Regex(@"(<!--.*?-->)|(.*-->)", RegexOptions.Singleline | RegexOptions.RightToLeft | RegexCompiledOption);
             HTMLTagRegex = new Regex(@"<|/>|</|>", RegexCompiledOption);
             HTMLTagNameRegex = new Regex(@"<(?<range>[!\w:]+)", RegexCompiledOption);
             HTMLEndTagRegex = new Regex(@"</(?<range>[\w:]+)>", RegexCompiledOption);
@@ -846,8 +903,14 @@ namespace FastColoredTextBoxNS
                 new Regex(
                     @"[\w\d\-]{1,20}?=(?<range>'[^']*')|[\w\d\-]{1,20}=(?<range>""[^""]*"")|[\w\d\-]{1,20}=(?<range>[\w\d\-]{1,20})",
                     RegexCompiledOption);
-            HTMLEntityRegex = new Regex(@"\&(amp|gt|lt|nbsp|quot|apos|copy|reg|#[0-9]{1,8}|#x[0-9a-f]{1,8});",
+            HTMLEntityRegex = new Regex(@"\&(amp|gt|lt|nbsp|quot|apos|copy|reg|rarr|larr|uarr|darr|tab|newline|excl|num|dollar|percnt|ast|commat|cent|pound|current|yen|brvbar|sect|dot|not|pm|sup2|sup3|#[0-9]{1,8}|#x[0-9a-f]{1,8});",
                                         RegexCompiledOption | RegexOptions.IgnoreCase);
+            HTMLFoldingBlockRegex = new Regex[HTMLFoldingBlockRegexTags.Length, 2];
+            for (int i = 0; i < HTMLFoldingBlockRegexTags.Length; i++)
+            {
+                HTMLFoldingBlockRegex[i, 0] = new Regex($@"<\s*{HTMLFoldingBlockRegexTags[i]}(\s+|>)", RegexOptions.IgnoreCase | RegexCompiledOption);
+                HTMLFoldingBlockRegex[i, 1] = new Regex($@"<\s*/\s*{HTMLFoldingBlockRegexTags[i]}\s*>", RegexOptions.IgnoreCase | RegexCompiledOption);
+            }
         }
 
         /// <summary>
@@ -873,6 +936,8 @@ namespace FastColoredTextBoxNS
             range.SetStyle(CommentStyle, HTMLCommentRegex2);
             //tag brackets highlighting
             range.SetStyle(TagBracketStyle, HTMLTagRegex);
+            //html entity
+            range.SetStyle(HtmlEntityStyle, HTMLEntityRegex);
             //tag name
             range.SetStyle(TagNameStyle, HTMLTagNameRegex);
             //end of tag
@@ -881,19 +946,14 @@ namespace FastColoredTextBoxNS
             range.SetStyle(AttributeStyle, HTMLAttrRegex);
             //attribute values
             range.SetStyle(AttributeValueStyle, HTMLAttrValRegex);
-            //html entity
-            range.SetStyle(HtmlEntityStyle, HTMLEntityRegex);
 
             //clear folding markers
             range.ClearFoldingMarkers();
             //set folding markers
-            range.SetFoldingMarkers("<head", "</head>", RegexOptions.IgnoreCase);
-            range.SetFoldingMarkers("<body", "</body>", RegexOptions.IgnoreCase);
-            range.SetFoldingMarkers("<table", "</table>", RegexOptions.IgnoreCase);
-            range.SetFoldingMarkers("<form", "</form>", RegexOptions.IgnoreCase);
-            range.SetFoldingMarkers("<div", "</div>", RegexOptions.IgnoreCase);
-            range.SetFoldingMarkers("<script", "</script>", RegexOptions.IgnoreCase);
-            range.SetFoldingMarkers("<tr", "</tr>", RegexOptions.IgnoreCase);
+            for (int i = 0; i < HTMLFoldingBlockRegex.GetLength(0); i++)
+            {
+                range.SetFoldingMarkers(HTMLFoldingBlockRegex[i, 0], HTMLFoldingBlockRegex[i, 1]);
+            }
         }
 
         protected void InitXMLRegex()
@@ -914,7 +974,7 @@ namespace FastColoredTextBoxNS
                 new Regex(
                     @"[\w\d\-]+?=(?<range>'[^']*')|[\w\d\-]+[ ]*=[ ]*(?<range>""[^""]*"")|[\w\d\-]+[ ]*=[ ]*(?<range>[\w\d\-]+)",
                     RegexCompiledOption);
-            XMLEntityRegex = new Regex(@"\&(amp|gt|lt|nbsp|quot|apos|copy|reg|#[0-9]{1,8}|#x[0-9a-f]{1,8});",
+            XMLEntityRegex = new Regex(@"\&(amp|gt|lt|nbsp|quot|apos|copy|reg|rarr|larr|uarr|darr|tab|newline|excl|num|dollar|percnt|ast|commat|cent|pound|current|yen|brvbar|sect|dot|not|pm|sup2|sup3|#[0-9]{1,8}|#x[0-9a-f]{1,8});",
                                         RegexCompiledOption | RegexOptions.IgnoreCase);
             XMLCDataRegex = new Regex(@"<!\s*\[CDATA\s*\[(?<text>(?>[^]]+|](?!]>))*)]]>", RegexCompiledOption | RegexOptions.IgnoreCase); // http://stackoverflow.com/questions/21681861/i-need-a-regex-that-matches-cdata-elements-in-html
             XMLFoldingRegex = new Regex(@"<(?<range>/?[\w:\-\.]+)\s[^>]*?[^/]>|<(?<range>/?[\w:\-\.]+)\s*>", RegexOptions.Singleline | RegexCompiledOption);
@@ -1037,11 +1097,10 @@ namespace FastColoredTextBoxNS
             SQLVarRegex = new Regex(@"@[a-zA-Z_\d]*\b", RegexCompiledOption);
             SQLStatementsRegex = new Regex(@"\b(ALTER APPLICATION ROLE|ALTER ASSEMBLY|ALTER ASYMMETRIC KEY|ALTER AUTHORIZATION|ALTER BROKER PRIORITY|ALTER CERTIFICATE|ALTER CREDENTIAL|ALTER CRYPTOGRAPHIC PROVIDER|ALTER DATABASE|ALTER DATABASE AUDIT SPECIFICATION|ALTER DATABASE ENCRYPTION KEY|ALTER ENDPOINT|ALTER EVENT SESSION|ALTER FULLTEXT CATALOG|ALTER FULLTEXT INDEX|ALTER FULLTEXT STOPLIST|ALTER FUNCTION|ALTER INDEX|ALTER LOGIN|ALTER MASTER KEY|ALTER MESSAGE TYPE|ALTER PARTITION FUNCTION|ALTER PARTITION SCHEME|ALTER PROCEDURE|ALTER QUEUE|ALTER REMOTE SERVICE BINDING|ALTER RESOURCE GOVERNOR|ALTER RESOURCE POOL|ALTER ROLE|ALTER ROUTE|ALTER SCHEMA|ALTER SERVER AUDIT|ALTER SERVER AUDIT SPECIFICATION|ALTER SERVICE|ALTER SERVICE MASTER KEY|ALTER SYMMETRIC KEY|ALTER TABLE|ALTER TRIGGER|ALTER USER|ALTER VIEW|ALTER WORKLOAD GROUP|ALTER XML SCHEMA COLLECTION|BULK INSERT|CREATE AGGREGATE|CREATE APPLICATION ROLE|CREATE ASSEMBLY|CREATE ASYMMETRIC KEY|CREATE BROKER PRIORITY|CREATE CERTIFICATE|CREATE CONTRACT|CREATE CREDENTIAL|CREATE CRYPTOGRAPHIC PROVIDER|CREATE DATABASE|CREATE DATABASE AUDIT SPECIFICATION|CREATE DATABASE ENCRYPTION KEY|CREATE DEFAULT|CREATE ENDPOINT|CREATE EVENT NOTIFICATION|CREATE EVENT SESSION|CREATE FULLTEXT CATALOG|CREATE FULLTEXT INDEX|CREATE FULLTEXT STOPLIST|CREATE FUNCTION|CREATE INDEX|CREATE LOGIN|CREATE MASTER KEY|CREATE MESSAGE TYPE|CREATE PARTITION FUNCTION|CREATE PARTITION SCHEME|CREATE PROCEDURE|CREATE QUEUE|CREATE REMOTE SERVICE BINDING|CREATE RESOURCE POOL|CREATE ROLE|CREATE ROUTE|CREATE RULE|CREATE SCHEMA|CREATE SERVER AUDIT|CREATE SERVER AUDIT SPECIFICATION|CREATE SERVICE|CREATE SPATIAL INDEX|CREATE STATISTICS|CREATE SYMMETRIC KEY|CREATE SYNONYM|CREATE TABLE|CREATE TRIGGER|CREATE TYPE|CREATE USER|CREATE VIEW|CREATE WORKLOAD GROUP|CREATE XML INDEX|CREATE XML SCHEMA COLLECTION|DELETE|DISABLE TRIGGER|DROP AGGREGATE|DROP APPLICATION ROLE|DROP ASSEMBLY|DROP ASYMMETRIC KEY|DROP BROKER PRIORITY|DROP CERTIFICATE|DROP CONTRACT|DROP CREDENTIAL|DROP CRYPTOGRAPHIC PROVIDER|DROP DATABASE|DROP DATABASE AUDIT SPECIFICATION|DROP DATABASE ENCRYPTION KEY|DROP DEFAULT|DROP ENDPOINT|DROP EVENT NOTIFICATION|DROP EVENT SESSION|DROP FULLTEXT CATALOG|DROP FULLTEXT INDEX|DROP FULLTEXT STOPLIST|DROP FUNCTION|DROP INDEX|DROP LOGIN|DROP MASTER KEY|DROP MESSAGE TYPE|DROP PARTITION FUNCTION|DROP PARTITION SCHEME|DROP PROCEDURE|DROP QUEUE|DROP REMOTE SERVICE BINDING|DROP RESOURCE POOL|DROP ROLE|DROP ROUTE|DROP RULE|DROP SCHEMA|DROP SERVER AUDIT|DROP SERVER AUDIT SPECIFICATION|DROP SERVICE|DROP SIGNATURE|DROP STATISTICS|DROP SYMMETRIC KEY|DROP SYNONYM|DROP TABLE|DROP TRIGGER|DROP TYPE|DROP USER|DROP VIEW|DROP WORKLOAD GROUP|DROP XML SCHEMA COLLECTION|ENABLE TRIGGER|EXEC|EXECUTE|REPLACE|FROM|INSERT|MERGE|OPTION|OUTPUT|SELECT|TOP|TRUNCATE TABLE|UPDATE|UPDATE STATISTICS|WHERE|WITH|INTO|IN|SET)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
             SQLKeywordsRegex = new Regex(@"\b(ADD|ALL|AND|ANY|AS|ASC|AUTHORIZATION|BACKUP|BEGIN|BETWEEN|BREAK|BROWSE|BY|CASCADE|CHECK|CHECKPOINT|CLOSE|CLUSTERED|COLLATE|COLUMN|COMMIT|COMPUTE|CONSTRAINT|CONTAINS|CONTINUE|CROSS|CURRENT|CURRENT_DATE|CURRENT_TIME|CURSOR|DATABASE|DBCC|DEALLOCATE|DECLARE|DEFAULT|DENY|DESC|DISK|DISTINCT|DISTRIBUTED|DOUBLE|DUMP|ELSE|END|ERRLVL|ESCAPE|EXCEPT|EXISTS|EXIT|EXTERNAL|FETCH|FILE|FILLFACTOR|FOR|FOREIGN|FREETEXT|FULL|FUNCTION|GOTO|GRANT|GROUP|HAVING|HOLDLOCK|IDENTITY|IDENTITY_INSERT|IDENTITYCOL|IF|INDEX|INNER|INTERSECT|IS|JOIN|KEY|KILL|LIKE|LINENO|LOAD|NATIONAL|NOCHECK|NONCLUSTERED|NOT|NULL|OF|OFF|OFFSETS|ON|OPEN|OR|ORDER|OUTER|OVER|PERCENT|PIVOT|PLAN|PRECISION|PRIMARY|PRINT|PROC|PROCEDURE|PUBLIC|RAISERROR|READ|READTEXT|RECONFIGURE|REFERENCES|REPLICATION|RESTORE|RESTRICT|RETURN|REVERT|REVOKE|ROLLBACK|ROWCOUNT|ROWGUIDCOL|RULE|SAVE|SCHEMA|SECURITYAUDIT|SHUTDOWN|SOME|STATISTICS|TABLE|TABLESAMPLE|TEXTSIZE|THEN|TO|TRAN|TRANSACTION|TRIGGER|TSEQUAL|UNION|UNIQUE|UNPIVOT|UPDATETEXT|USE|USER|VALUES|VARYING|VIEW|WAITFOR|WHEN|WHILE|WRITETEXT)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
+            //SQLKeywordsRegex = new Regex(@"\b(ALL|ALTER|ADD|AND|ANY|AS|ASC|BACKUP|BETWEEN|BY|CASE|CHECK|COLUMN|CONSTRAINT|CREATE|DATABASE|DEFAULT|DELETE|DESC|DISTINCT|DROP|EXEC|EXISTS|FOREIGN|HAVING|IN|INDEX|INNER|INSERT|INTO|IS|NOT|NULL|JOIN|LEFT|LIKE|LIMIT|KEY|OR|ORDER|OUTER|PRIMARY|PROCEDURE|RENAME|RIGHT|ROWNUM|SELECT|SET|TABLE|TOP|UNION|UNIQUE|USE|UPDATE|VALUES|VIEW|WHERE)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
             SQLFunctionsRegex = new Regex(@"(@@CONNECTIONS|@@CPU_BUSY|@@CURSOR_ROWS|@@DATEFIRST|@@DATEFIRST|@@DBTS|@@ERROR|@@FETCH_STATUS|@@IDENTITY|@@IDLE|@@IO_BUSY|@@LANGID|@@LANGUAGE|@@LOCK_TIMEOUT|@@MAX_CONNECTIONS|@@MAX_PRECISION|@@NESTLEVEL|@@OPTIONS|@@PACKET_ERRORS|@@PROCID|@@REMSERVER|@@ROWCOUNT|@@SERVERNAME|@@SERVICENAME|@@SPID|@@TEXTSIZE|@@TRANCOUNT|@@VERSION)\b|\b(ABS|ACOS|APP_NAME|ASCII|ASIN|ASSEMBLYPROPERTY|AsymKey_ID|ASYMKEY_ID|asymkeyproperty|ASYMKEYPROPERTY|ATAN|ATN2|AVG|CASE|CAST|CEILING|Cert_ID|Cert_ID|CertProperty|CHAR|CHARINDEX|CHECKSUM_AGG|COALESCE|COL_LENGTH|COL_NAME|COLLATIONPROPERTY|COLLATIONPROPERTY|COLUMNPROPERTY|COLUMNS_UPDATED|COLUMNS_UPDATED|CONTAINSTABLE|CONVERT|COS|COT|COUNT|COUNT_BIG|CRYPT_GEN_RANDOM|CURRENT_TIMESTAMP|CURRENT_TIMESTAMP|CURRENT_USER|CURRENT_USER|CURSOR_STATUS|DATABASE_PRINCIPAL_ID|DATABASE_PRINCIPAL_ID|DATABASEPROPERTY|DATABASEPROPERTYEX|DATALENGTH|DATALENGTH|DATEADD|DATEDIFF|DATENAME|DATEPART|DAY|DB_ID|DB_NAME|DECRYPTBYASYMKEY|DECRYPTBYCERT|DECRYPTBYKEY|DECRYPTBYKEYAUTOASYMKEY|DECRYPTBYKEYAUTOCERT|DECRYPTBYPASSPHRASE|DEGREES|DENSE_RANK|DIFFERENCE|ENCRYPTBYASYMKEY|ENCRYPTBYCERT|ENCRYPTBYKEY|ENCRYPTBYPASSPHRASE|ERROR_LINE|ERROR_MESSAGE|ERROR_NUMBER|ERROR_PROCEDURE|ERROR_SEVERITY|ERROR_STATE|EVENTDATA|EXP|FILE_ID|FILE_IDEX|FILE_NAME|FILEGROUP_ID|FILEGROUP_NAME|FILEGROUPPROPERTY|FILEPROPERTY|FLOOR|fn_helpcollations|fn_listextendedproperty|fn_servershareddrives|fn_virtualfilestats|fn_virtualfilestats|FORMATMESSAGE|FREETEXTTABLE|FULLTEXTCATALOGPROPERTY|FULLTEXTSERVICEPROPERTY|GETANSINULL|GETDATE|GETUTCDATE|GROUPING|HAS_PERMS_BY_NAME|HOST_ID|HOST_NAME|IDENT_CURRENT|IDENT_CURRENT|IDENT_INCR|IDENT_INCR|IDENT_SEED|IDENTITY\(|INDEX_COL|INDEXKEY_PROPERTY|INDEXPROPERTY|IS_MEMBER|IS_OBJECTSIGNED|IS_SRVROLEMEMBER|ISDATE|ISDATE|ISNULL|ISNUMERIC|Key_GUID|Key_GUID|Key_ID|Key_ID|KEY_NAME|KEY_NAME|LEFT|LEN|LOG|LOG10|LOWER|LTRIM|MAX|MIN|MONTH|NCHAR|NEWID|NTILE|NULLIF|OBJECT_DEFINITION|OBJECT_ID|OBJECT_NAME|OBJECT_SCHEMA_NAME|OBJECTPROPERTY|OBJECTPROPERTYEX|OPENDATASOURCE|OPENQUERY|OPENROWSET|OPENXML|ORIGINAL_LOGIN|ORIGINAL_LOGIN|PARSENAME|PATINDEX|PATINDEX|PERMISSIONS|PI|POWER|PUBLISHINGSERVERNAME|PWDCOMPARE|PWDENCRYPT|QUOTENAME|RADIANS|RAND|RANK|REPLICATE|REVERSE|RIGHT|ROUND|ROW_NUMBER|ROWCOUNT_BIG|RTRIM|SCHEMA_ID|SCHEMA_ID|SCHEMA_NAME|SCHEMA_NAME|SCOPE_IDENTITY|SERVERPROPERTY|SESSION_USER|SESSION_USER|SESSIONPROPERTY|SETUSER|SIGN|SignByAsymKey|SignByCert|SIN|SOUNDEX|SPACE|SQL_VARIANT_PROPERTY|SQRT|SQUARE|STATS_DATE|STDEV|STDEVP|STR|STUFF|SUBSTRING|SUM|SUSER_ID|SUSER_NAME|SUSER_SID|SUSER_SNAME|SWITCHOFFSET|SYMKEYPROPERTY|symkeyproperty|sys\.dm_db_index_physical_stats|sys\.fn_builtin_permissions|sys\.fn_my_permissions|SYSDATETIME|SYSDATETIMEOFFSET|SYSTEM_USER|SYSTEM_USER|SYSUTCDATETIME|TAN|TERTIARY_WEIGHTS|TEXTPTR|TODATETIMEOFFSET|TRIGGER_NESTLEVEL|TYPE_ID|TYPE_NAME|TYPEPROPERTY|UNICODE|UPDATE\(|UPPER|USER_ID|USER_NAME|USER_NAME|VAR|VARP|VerifySignedByAsymKey|VerifySignedByCert|XACT_STATE|YEAR)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
-            SQLTypesRegex =
-                new Regex(
-                    @"\b(BIGINT|NUMERIC|BIT|SMALLINT|DECIMAL|SMALLMONEY|INT|TINYINT|MONEY|FLOAT|REAL|DATE|DATETIMEOFFSET|DATETIME2|SMALLDATETIME|DATETIME|TIME|CHAR|VARCHAR|TEXT|NCHAR|NVARCHAR|NTEXT|BINARY|VARBINARY|IMAGE|TIMESTAMP|HIERARCHYID|TABLE|UNIQUEIDENTIFIER|SQL_VARIANT|XML)\b",
-                    RegexOptions.IgnoreCase | RegexCompiledOption);
+            SQLTypesRegex = new Regex(@"\b(BIGINT|NUMERIC|BIT|SMALLINT|DECIMAL|SMALLMONEY|INT|TINYINT|MONEY|FLOAT|REAL|DATE|DATETIMEOFFSET|DATETIME2|SMALLDATETIME|DATETIME|TIME|CHAR|VARCHAR|TEXT|NCHAR|NVARCHAR|NTEXT|BINARY|VARBINARY|IMAGE|TIMESTAMP|HIERARCHYID|TABLE|UNIQUEIDENTIFIER|SQL_VARIANT|XML)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
+            //SQLTypesRegex = new Regex(@"\b(BIGINT|BINARY|BIT|BOOL|BOOLEAN|CHAR|CURSOR|DATE|DATETIME|DEC|DECIMAL|FLOAT|INT|INTEGER|MEDIUMINT|SMALLINT|TINYINT|TIME|TIMESTAMP|VARCHAR)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
         }
 
         /// <summary>
@@ -1160,17 +1219,13 @@ namespace FastColoredTextBoxNS
 
         protected void InitJScriptRegex()
         {
-            JScriptStringRegex = new Regex(@"""""|''|"".*?[^\\]""|'.*?[^\\]'", RegexCompiledOption);
+            //JScriptStringRegex = new Regex(@"""""|''|``|"".*?[^\\]""|'.*?[^\\]'|`.*?[^\\]`", RegexCompiledOption);
+            JScriptStringRegex = new Regex(@"""""|''|``|""((\\.|[^""\\])*)""|'((\\.|[^'\\])*)'|`((\\.|[^`\\])*)`", RegexCompiledOption);
             JScriptCommentRegex1 = new Regex(@"//.*$", RegexOptions.Multiline | RegexCompiledOption);
             JScriptCommentRegex2 = new Regex(@"(/\*.*?\*/)|(/\*.*)", RegexOptions.Singleline | RegexCompiledOption);
-            JScriptCommentRegex3 = new Regex(@"(/\*.*?\*/)|(.*\*/)",
-                                             RegexOptions.Singleline | RegexOptions.RightToLeft | RegexCompiledOption);
-            JScriptNumberRegex = new Regex(@"\b\d+[\.]?\d*([eE]\-?\d+)?[lLdDfF]?\b|\b0x[a-fA-F\d]+\b",
-                                           RegexCompiledOption);
-            JScriptKeywordRegex =
-                new Regex(
-                    @"\b(true|false|break|case|catch|const|continue|default|delete|do|else|export|for|function|if|in|instanceof|new|null|return|switch|this|throw|try|var|void|while|with|typeof)\b",
-                    RegexCompiledOption);
+            JScriptCommentRegex3 = new Regex(@"(/\*.*?\*/)|(.*\*/)", RegexOptions.Singleline | RegexOptions.RightToLeft | RegexCompiledOption);
+            JScriptNumberRegex = new Regex(@"\b\d+[\.]?\d*([e]\-?\d+)?[ldf]?\b|\b0x[a-f\d]+\b", RegexOptions.IgnoreCase | RegexCompiledOption);
+            JScriptKeywordRegex = new Regex(@"\b(true|false|break|case|catch|const|continue|default|delete|do|else|export|finally|for|function|if|in|instanceof|let|new|null|of|return|switch|this|throw|try|undefined|var|void|while|with|typeof)\b", RegexCompiledOption);
         }
 
         /// <summary>
@@ -1304,9 +1359,13 @@ namespace FastColoredTextBoxNS
 
         protected void InitJSONRegex()
         {
-            JSONStringRegex = new Regex(@"""([^\\""]|\\"")*""", RegexCompiledOption);
-            JSONNumberRegex = new Regex(@"\b(\d+[\.]?\d*|true|false|null)\b", RegexCompiledOption);
-            JSONKeywordRegex = new Regex(@"(?<range>""([^\\""]|\\"")*"")\s*:", RegexCompiledOption);
+            //JSONStringRegex = new Regex(@"""""|''|"".*?[^\\]""|'.*?[^\\]'", RegexCompiledOption);
+            JSONStringRegex = new Regex(@"""""|''|""((\\.|[^""\\])*)""|'((\\.|[^'\\])*)'", RegexCompiledOption);
+            //JSONNumberRegex = new Regex(@"\b(\d+[\.]?\d*)\b", RegexCompiledOption);
+            JSONNumberRegex = new Regex(@"(?:\b|(?<=\s))[\-]?(\d+(\.\d+)?)\b", RegexOptions.IgnoreCase | RegexCompiledOption);
+            JSONKeywordRegex = new Regex(@"\b(true|false)\b", RegexCompiledOption);
+            JSONKeywordRegex2 = new Regex(@"\b(null)\b", RegexCompiledOption);
+            JSONValueRegex = new Regex(@"(?<range>""([^\\""]|\\"")*"")\s*:", RegexCompiledOption);
         }
 
         /// <summary>
@@ -1331,12 +1390,16 @@ namespace FastColoredTextBoxNS
             //
             if (JSONStringRegex == null)
                 InitJSONRegex();
-            //keyword highlighting
-            range.SetStyle(KeywordStyle, JSONKeywordRegex);
+            //property highlighting
+            range.SetStyle(VariableStyle, JSONValueRegex);
             //string highlighting
             range.SetStyle(StringStyle, JSONStringRegex);
             //number highlighting
             range.SetStyle(NumberStyle, JSONNumberRegex);
+            //keyword highlighting
+            range.SetStyle(KeywordStyle, JSONKeywordRegex);
+            //null highlighting
+            range.SetStyle(KeywordStyle2, JSONKeywordRegex2);
             //clear folding markers
             range.ClearFoldingMarkers();
             //set folding markers
@@ -1344,7 +1407,13 @@ namespace FastColoredTextBoxNS
             range.SetFoldingMarkers(@"\[", @"\]"); //allow to collapse comment block
         }
 
-        #region Styles
+        protected void JSONAutoIndentNeeded(object sender, AutoIndentEventArgs args)
+        {
+            var tb = sender as FastColoredTextBox;
+            tb.CalcAutoIndentShiftByCodeFolding(sender, args);
+        }
+
+#region Styles
 
         /// <summary>
         /// String style
@@ -1365,6 +1434,11 @@ namespace FastColoredTextBoxNS
         /// C# attribute style
         /// </summary>
         public Style AttributeStyle { get; set; }
+
+        /// <summary>
+        /// C# preprocessor directives style 
+        /// </summary>
+        public Style PreprocessorStyle { get; set; }
 
         /// <summary>
         /// Class name style
@@ -1461,7 +1535,7 @@ namespace FastColoredTextBoxNS
         /// </summary>
         public Style TypesStyle { get; set; }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -1478,6 +1552,7 @@ namespace FastColoredTextBoxNS
         PHP,
         JS,
         Lua,
-        JSON
+        JSON,
+        PlainText
     }
 }

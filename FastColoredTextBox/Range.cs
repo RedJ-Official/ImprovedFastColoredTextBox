@@ -3,6 +3,7 @@ using System.Text;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using static System.Windows.Forms.Design.AxImporter;
 
 namespace FastColoredTextBoxNS
 {
@@ -823,6 +824,15 @@ namespace FastColoredTextBoxNS
         }
 
         /// <summary>
+        /// Sets folding markers for HTML code
+        /// </summary>
+        /// <param name="tagName">HTML tag name</param>
+        public void SetHTMLFoldingMarkers(string tagName)
+        {
+            SetFoldingMarkers($@"<\s?{tagName}(\s+|>)", $@"<\s?/\s?{tagName}\s?>", RegexOptions.IgnoreCase | SyntaxHighlighter.RegexCompiledOption);
+        }
+
+        /// <summary>
         /// Sets folding markers
         /// </summary>
         /// <param name="startFoldingPattern">Pattern for start folding line</param>
@@ -837,6 +847,7 @@ namespace FastColoredTextBoxNS
         /// </summary>
         /// <param name="startFoldingPattern">Pattern for start folding line</param>
         /// <param name="finishFoldingPattern">Pattern for finish folding line</param>
+        /// <param name="options">Regex options</param>
         public void SetFoldingMarkers(string startFoldingPattern, string finishFoldingPattern, RegexOptions options)
         {
             if (startFoldingPattern == finishFoldingPattern)
@@ -857,7 +868,8 @@ namespace FastColoredTextBoxNS
         /// <summary>
         /// Sets folding markers
         /// </summary>
-        /// <param name="startEndFoldingPattern">Pattern for start and end folding line</param>
+        /// <param name="foldingPattern">Pattern for start and end folding line</param>
+        /// <param name="options">Regex options</param>
         public void SetFoldingMarkers(string foldingPattern, RegexOptions options)
         {
             foreach (var range in GetRanges(foldingPattern, options))
@@ -869,6 +881,45 @@ namespace FastColoredTextBoxNS
 
             tb.Invalidate();
         }
+
+        /// <summary>
+        /// Sets folding markers
+        /// </summary>
+        /// <param name="startFoldingPattern">Pattern for start folding line</param>
+        /// <param name="finishFoldingPattern">Pattern for finish folding line</param>
+        public void SetFoldingMarkers(Regex startFoldingPattern, Regex finishFoldingPattern)
+        {
+            if (startFoldingPattern == finishFoldingPattern)
+            {
+                SetFoldingMarkers(startFoldingPattern);
+                return;
+            }
+
+            foreach (var range in GetRanges(startFoldingPattern))
+                tb[range.Start.iLine].FoldingStartMarker = startFoldingPattern.ToString();
+
+            foreach (var range in GetRanges(finishFoldingPattern))
+                tb[range.Start.iLine].FoldingEndMarker = startFoldingPattern.ToString();
+            //
+            tb.Invalidate();
+        }
+
+        /// <summary>
+        /// Sets folding markers
+        /// </summary>
+        /// <param name="foldingPattern">Pattern for start and end folding line</param>
+        public void SetFoldingMarkers(Regex foldingPattern)
+        {
+            foreach (var range in GetRanges(foldingPattern))
+            {
+                if (range.Start.iLine > 0)
+                    tb[range.Start.iLine - 1].FoldingEndMarker = foldingPattern.ToString();
+                tb[range.Start.iLine].FoldingStartMarker = foldingPattern.ToString();
+            }
+
+            tb.Invalidate();
+        }
+
         /// <summary>
         /// Finds ranges for given regex pattern
         /// </summary>

@@ -704,6 +704,11 @@
             C# attribute style
             </summary>
         </member>
+        <member name="P:FastColoredTextBoxNS.SyntaxHighlighter.PreprocessorStyle">
+            <summary>
+            C# preprocessor directives style 
+            </summary>
+        </member>
         <member name="P:FastColoredTextBoxNS.SyntaxHighlighter.ClassNameStyle">
             <summary>
             Class name style
@@ -1410,6 +1415,11 @@
         <member name="E:FastColoredTextBoxNS.FastColoredTextBox.ToolTipNeeded">
             <summary>
             Occurs when mouse is moving over text and tooltip is needed
+            </summary>
+        </member>
+        <member name="P:FastColoredTextBoxNS.FastColoredTextBox.DefaultMarkerSize">
+            <summary>
+            Default size of the markers
             </summary>
         </member>
         <member name="M:FastColoredTextBoxNS.FastColoredTextBox.ClearHints">
@@ -2924,6 +2934,12 @@
             Appends style to chars of range
             </summary>
         </member>
+        <member name="M:FastColoredTextBoxNS.Range.SetHTMLFoldingMarkers(System.String)">
+            <summary>
+            Sets folding markers for HTML code
+            </summary>
+            <param name="tagName">HTML tag name</param>
+        </member>
         <member name="M:FastColoredTextBoxNS.Range.SetFoldingMarkers(System.String,System.String)">
             <summary>
             Sets folding markers
@@ -2937,12 +2953,27 @@
             </summary>
             <param name="startFoldingPattern">Pattern for start folding line</param>
             <param name="finishFoldingPattern">Pattern for finish folding line</param>
+            <param name="options">Regex options</param>
         </member>
         <member name="M:FastColoredTextBoxNS.Range.SetFoldingMarkers(System.String,System.Text.RegularExpressions.RegexOptions)">
             <summary>
             Sets folding markers
             </summary>
-            <param name="startEndFoldingPattern">Pattern for start and end folding line</param>
+            <param name="foldingPattern">Pattern for start and end folding line</param>
+            <param name="options">Regex options</param>
+        </member>
+        <member name="M:FastColoredTextBoxNS.Range.SetFoldingMarkers(System.Text.RegularExpressions.Regex,System.Text.RegularExpressions.Regex)">
+            <summary>
+            Sets folding markers
+            </summary>
+            <param name="startFoldingPattern">Pattern for start folding line</param>
+            <param name="finishFoldingPattern">Pattern for finish folding line</param>
+        </member>
+        <member name="M:FastColoredTextBoxNS.Range.SetFoldingMarkers(System.Text.RegularExpressions.Regex)">
+            <summary>
+            Sets folding markers
+            </summary>
+            <param name="foldingPattern">Pattern for start and end folding line</param>
         </member>
         <member name="M:FastColoredTextBoxNS.Range.GetRanges(System.String)">
             <summary>

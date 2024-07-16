@@ -103,6 +103,8 @@ namespace FastColoredTextBoxNS
             set { listView.Font = value; }
         }
 
+        public bool MenuEnabled { get; set; }
+
         new internal void OnOpening(CancelEventArgs args)
         {
             if (Opening != null)
@@ -378,7 +380,7 @@ namespace FastColoredTextBoxNS
 
         internal void DoAutocomplete(bool forced)
         {
-            if (!Menu.Enabled)
+            if (!Menu.MenuEnabled && !forced)
             {
                 Menu.Close();
                 return;
