@@ -77,6 +77,12 @@
     <Compile Include="MacrosManager.cs" />
     <Compile Include="PlatformType.cs" />
     <Compile Include="Hotkeys.cs" />
+    <Compile Include="RegexOptionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RegexOptionsForm.Designer.cs">
+      <DependentUpon>RegexOptionsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Ruler.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -128,6 +134,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="HotkeysEditorForm.resx">
       <DependentUpon>HotkeysEditorForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RegexOptionsForm.resx">
+      <DependentUpon>RegexOptionsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ReplaceForm.resx">
       <DependentUpon>ReplaceForm.cs</DependentUpon>

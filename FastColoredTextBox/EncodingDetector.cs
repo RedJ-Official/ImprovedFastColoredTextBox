@@ -23,8 +23,7 @@ namespace FastColoredTextBoxNS
 
         public static Encoding DetectTextFileEncoding(FileStream InputFileStream, long HeuristicSampleSize)
         {
-            bool uselessBool = false;
-            return DetectTextFileEncoding(InputFileStream, _defaultHeuristicSampleSize, out uselessBool);
+            return DetectTextFileEncoding(InputFileStream, HeuristicSampleSize, out _);
         }
 
         public static Encoding DetectTextFileEncoding(FileStream InputFileStream, long HeuristicSampleSize, out bool HasBOM)
@@ -77,30 +76,30 @@ namespace FastColoredTextBoxNS
                     || BOMBytes[3] != 0
                     )
                 )
-                return Encoding.Unicode;
+                return new UnicodeEncoding(false, true);
 
             if (BOMBytes[0] == 0xfe
                 && BOMBytes[1] == 0xff
                 )
-                return Encoding.BigEndianUnicode;
+                return new UnicodeEncoding(true, true);
 
             if (BOMBytes.Length < 3)
                 return null;
 
             if (BOMBytes[0] == 0xef && BOMBytes[1] == 0xbb && BOMBytes[2] == 0xbf)
-                return Encoding.UTF8;
+                return new UTF8Encoding(true);
 
             if (BOMBytes[0] == 0x2b && BOMBytes[1] == 0x2f && BOMBytes[2] == 0x76)
-                return Encoding.UTF7;
+                return new UTF7Encoding();
 
             if (BOMBytes.Length < 4)
                 return null;
 
             if (BOMBytes[0] == 0xff && BOMBytes[1] == 0xfe && BOMBytes[2] == 0 && BOMBytes[3] == 0)
-                return Encoding.UTF32;
+                return new UTF32Encoding(false, true);
 
             if (BOMBytes[0] == 0 && BOMBytes[1] == 0 && BOMBytes[2] == 0xfe && BOMBytes[3] == 0xff)
-                return Encoding.GetEncoding(12001);
+                return new UTF32Encoding(true, true);
 
             return null;
         }
@@ -164,7 +163,7 @@ namespace FastColoredTextBoxNS
             if (((evenBinaryNullsInSample * 2.0) / SampleBytes.Length) < 0.2
                 && ((oddBinaryNullsInSample * 2.0) / SampleBytes.Length) > 0.6
                 )
-                return Encoding.Unicode;
+                return new UnicodeEncoding(false, false);
 
 
             //2: UTF-16 BE - in english / european environments, this is usually characterized by a 
@@ -176,7 +175,7 @@ namespace FastColoredTextBoxNS
             if (((oddBinaryNullsInSample * 2.0) / SampleBytes.Length) < 0.2
                 && ((evenBinaryNullsInSample * 2.0) / SampleBytes.Length) > 0.6
                 )
-                return Encoding.BigEndianUnicode;
+                return new UnicodeEncoding(true, false);
 
 
             //3: UTF-8 - Martin Dürst outlines a method for detecting whether something CAN be UTF-8 content 
@@ -224,7 +223,7 @@ namespace FastColoredTextBoxNS
                            likelyUSASCIIBytesInSample * 1.0 / (SampleBytes.Length - suspiciousUTF8BytesTotal) >= 0.8
                        )
                     )
-                    return Encoding.UTF8;
+                    return new UTF8Encoding(false);
             }
 
             return null;

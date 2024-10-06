@@ -90,7 +90,7 @@ namespace FastColoredTextBoxNS
             }
             else if (obj is AutocompleteItem item)
             {
-                return this.menuText.CompareTo(item.menuText);
+                return this.ToString().CompareTo(item.ToString());
             }
             else
             {
@@ -106,7 +106,7 @@ namespace FastColoredTextBoxNS
             }
             else
             {
-                return this.menuText.CompareTo(other.menuText);
+                return this.ToString().CompareTo(other.ToString());
             }
         }
 

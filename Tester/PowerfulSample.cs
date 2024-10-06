@@ -41,6 +41,21 @@ namespace Tester
         
         private void fctb_TextChanged(object sender, TextChangedEventArgs e)
         {
+            #region benchmark
+            //string sample = "text\n// comment\n \"string\"\n// \"comment\"\n\"//comment\"\n";
+            //for (int i = 0; i < 10; i++)
+            //    sample += sample;
+            //int execs = 1000000;
+            //var dt1 = DateTime.Now;
+            //for (int i = 0; i < execs; i++)
+            //    Regex.Match(sample, @"//.*$", RegexOptions.Multiline);
+            //var dt2 = DateTime.Now;
+            //for (int i = 0; i < execs; i++)
+            //    Regex.Match(sample, @"(?<=^(?:(?:(?:[^""']|\\""|\\')*?(?:""|')){2})*?(?:[^""']|\\""|\\')*?)//.*$", RegexOptions.Multiline | RegexOptions.Compiled);
+            //var dt3 = DateTime.Now;
+            //MessageBox.Show((dt1 - dt2).ToString());
+            //MessageBox.Show((dt2 - dt3).ToString());
+            #endregion
             switch (lang)
             {
                 case "CSharp (custom highlighter)":
@@ -136,11 +151,16 @@ namespace Tester
                 case "VB": fctb.Language = Language.VB; break;
                 case "HTML": fctb.Language = Language.HTML; break;
                 case "XML": fctb.Language = Language.XML; break;
-                case "SQL": fctb.Language = Language.SQL; break;
+                case "SQL": fctb.Language = Language.MySQL; break;
                 case "PHP": fctb.Language = Language.PHP; break;
                 case "JS": fctb.Language = Language.JS; break;
                 case "Lua": fctb.Language = Language.Lua; break;
                 case "JSON": fctb.Language = Language.JSON; break;
+                case "MySQL": fctb.Language = Language.MySQL; break;
+                case "Batch": fctb.Language = Language.Batch; break;
+                case "Java": fctb.Language = Language.Java; break;
+                case "Plain Text": fctb.Language = Language.PlainText; break;
+                case "Python": fctb.Language = Language.Python; break;
             }
             fctb.OnSyntaxHighlight(new TextChangedEventArgs(fctb.Range));
             miChangeColors.Enabled = lang != "CSharp (custom highlighter)";

@@ -25,10 +25,10 @@ Public Class AutocompleteSample2
     Private declarationSnippets As String() = {"public class ^" & vbLf & "{" & vbLf & "}", "private class ^" & vbLf & "{" & vbLf & "}", "internal class ^" & vbLf & "{" & vbLf & "}", "public struct ^" & vbLf & "{" & vbLf & ";" & vbLf & "}", "private struct ^" & vbLf & "{" & vbLf & ";" & vbLf & "}", "internal struct ^" & vbLf & "{" & vbLf & ";" & vbLf & "}", _
      "public void ^()" & vbLf & "{" & vbLf & ";" & vbLf & "}", "private void ^()" & vbLf & "{" & vbLf & ";" & vbLf & "}", "internal void ^()" & vbLf & "{" & vbLf & ";" & vbLf & "}", "protected void ^()" & vbLf & "{" & vbLf & ";" & vbLf & "}", "public ^{ get; set; }", "private ^{ get; set; }", _
      "internal ^{ get; set; }", "protected ^{ get; set; }"}
-
+    
     Public Sub New()
         InitializeComponent()
-
+    
         'create autocomplete popup menu
         popupMenu = New AutocompleteMenu(fctb)
         popupMenu.Items.ImageList = imageList1

@@ -112,6 +112,25 @@ namespace FastColoredTextBoxNS
             return true;
         }
 
+        public bool Contains(Range range)
+        {
+            if (tb != range.tb) return false;
+
+            if (Contains(range.Start)) return true;
+            if (Contains(range.End)) return true;
+
+            if (range.Start <= Start && range.End >= End) return true;
+
+            return false;
+        }
+
+        public bool IsSame(Range range)
+        {
+            if (tb != range.tb) return false;
+
+            return Start == range.Start && End == range.End;
+        }
+
         /// <summary>
         /// Returns intersection with other range,
         /// empty range returned otherwise
@@ -778,7 +797,7 @@ namespace FastColoredTextBoxNS
         /// </summary>
         public void SetStyle(StyleIndex styleLayer, string regexPattern, RegexOptions options)
         {
-            if (Math.Abs(Start.iLine - End.iLine) > 1000)
+            if (Math.Abs(Start.iLine - End.iLine) > 10000)
                 options |= SyntaxHighlighter.RegexCompiledOption;
             //
             foreach (var range in GetRanges(regexPattern, options))
@@ -934,9 +953,20 @@ namespace FastColoredTextBoxNS
         /// Finds ranges for given regex pattern
         /// </summary>
         /// <param name="regexPattern">Regex pattern</param>
+        /// <param name="options">Regex options</param>
         /// <returns>Enumeration of ranges</returns>
-        public IEnumerable<Range> GetRanges(string regexPattern, RegexOptions options)
+        public IEnumerable<Range> GetRanges(string regexPattern, RegexOptions options, bool recurse = true)
         {
+            if (recurse && ((options & RegexOptions.Singleline) != 0))
+            {
+                if (IsSame(tb.Range))
+                    goto regularHighlighting;
+                foreach (Range r in tb.Range.GetRanges(regexPattern, options, false))
+                    if (tb.VisibleRange.Contains(r))
+                        yield return r;
+                yield break;
+            }
+        regularHighlighting:
             //get text
             string text;
             List<Place> charIndexToPlace;
@@ -964,6 +994,7 @@ namespace FastColoredTextBoxNS
         /// This method requires less memory than GetRanges().
         /// </summary>
         /// <param name="regexPattern">Regex pattern</param>
+        /// <param name="options">Regex options</param>
         /// <returns>Enumeration of ranges</returns>
         public IEnumerable<Range> GetRangesByLines(string regexPattern, RegexOptions options)
         {
@@ -1009,6 +1040,7 @@ namespace FastColoredTextBoxNS
         /// This method requires less memory than GetRanges().
         /// </summary>
         /// <param name="regexPattern">Regex pattern</param>
+        /// <param name="options">Regex options</param>
         /// <returns>Enumeration of ranges</returns>
         public IEnumerable<Range> GetRangesByLinesReversed(string regexPattern, RegexOptions options)
         {
@@ -1045,8 +1077,18 @@ namespace FastColoredTextBoxNS
         /// Finds ranges for given regex
         /// </summary>
         /// <returns>Enumeration of ranges</returns>
-        public IEnumerable<Range> GetRanges(Regex regex)
+        public IEnumerable<Range> GetRanges(Regex regex, bool recurse = true)
         {
+            if (recurse && ((regex.Options & RegexOptions.Singleline) != 0))
+            {
+                if (IsSame(tb.Range))
+                    goto regularHighlighting;
+                foreach (Range r in tb.GetExtendedVisibleRange().GetRanges(regex, false))
+                    if (tb.VisibleRange.Contains(r))
+                        yield return r;
+                yield break;
+            }
+        regularHighlighting:
             //get text
             string text;
             List<Place> charIndexToPlace;

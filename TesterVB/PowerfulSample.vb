@@ -111,7 +111,7 @@ Public Class PowerfulSample
                 FastColoredTextBox1.OnTextChanged()
             Case "VB" : FastColoredTextBox1.Language = Language.VB
             Case "HTML" : FastColoredTextBox1.Language = Language.HTML
-            Case "SQL" : FastColoredTextBox1.Language = Language.SQL
+            Case "SQL" : FastColoredTextBox1.Language = Language.SQLServer
             Case "PHP" : FastColoredTextBox1.Language = Language.PHP
         End Select
 

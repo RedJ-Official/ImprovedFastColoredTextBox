@@ -18,7 +18,7 @@
 // However, you can to compile FCTB with 32 styles supporting.
 // Uncomment following definition if you need 32 styles instead of 16:
 //
-// #define Styles32
+#define Styles32
 
 using System;
 using System.Collections.Generic;
@@ -87,6 +87,7 @@ namespace FastColoredTextBoxNS
         private DateTime lastNavigatedDateTime;
         private Range leftBracketPosition;
         private Range leftBracketPosition2;
+        private Range leftBracketPosition3;
         private int leftPadding;
         private int lineInterval;
         private Color lineNumberColor;
@@ -110,6 +111,7 @@ namespace FastColoredTextBoxNS
         private int preferredLineWidth;
         private Range rightBracketPosition;
         private Range rightBracketPosition2;
+        private Range rightBracketPosition3;
         private bool scrollBars;
         private Color selectionColor;
         private Color serviceLinesColor;
@@ -162,6 +164,7 @@ namespace FastColoredTextBoxNS
             SelectionColor = Color.Blue;
             BracketsStyle = new MarkerStyle(new SolidBrush(Color.FromArgb(80, Color.Lime)));
             BracketsStyle2 = new MarkerStyle(new SolidBrush(Color.FromArgb(60, Color.Red)));
+            BracketsStyle3 = new MarkerStyle(new SolidBrush(Color.FromArgb(70, Color.Blue)));
             DelayedEventsInterval = 100;
             DelayedTextChangedInterval = 100;
             AllowSeveralTextStyleDrawing = false;
@@ -871,6 +874,12 @@ namespace FastColoredTextBoxNS
         public MarkerStyle BracketsStyle2 { get; set; }
 
         /// <summary>
+        /// Style for another alternative brackets highlighting
+        /// </summary>
+        [Browsable(false)]
+        public MarkerStyle BracketsStyle3 { get; set; }
+
+        /// <summary>
         /// Opening bracket for brackets highlighting.
         /// Set to '\x0' for disable brackets highlighting.
         /// </summary>
@@ -901,6 +910,22 @@ namespace FastColoredTextBoxNS
         [DefaultValue('\x0')]
         [Description("Alternative closing bracket for brackets highlighting. Set to '\\x0' for disable brackets highlighting.")]
         public char RightBracket2 { get; set; }
+
+        /// <summary>
+        /// Another alternative opening bracket for brackets highlighting.
+        /// Set to '\x0' for disable brackets highlighting.
+        /// </summary>
+        [DefaultValue('\x0')]
+        [Description("Another alternative opening bracket for brackets highlighting. Set to '\\x0' for disable brackets highlighting.")]
+        public char LeftBracket3 { get; set; }
+
+        /// <summary>
+        /// Another alternative closing bracket for brackets highlighting.
+        /// Set to '\x0' for disable brackets highlighting.
+        /// </summary>
+        [DefaultValue('\x0')]
+        [Description("Another alternative closing bracket for brackets highlighting. Set to '\\x0' for disable brackets highlighting.")]
+        public char RightBracket3 { get; set; }
 
         /// <summary>
         /// Comment line prefix.
@@ -1076,6 +1101,26 @@ namespace FastColoredTextBoxNS
         public Range RightBracketPosition2
         {
             get { return rightBracketPosition2; }
+        }
+
+        /// <summary>
+        /// Position of another left highlighted alternative bracket.
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Range LeftBracketPosition3
+        {
+            get { return leftBracketPosition3; }
+        }
+
+        /// <summary>
+        /// Position of another right highlighted alternative bracket 2.
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Range RightBracketPosition3
+        {
+            get { return rightBracketPosition3; }
         }
 
         /// <summary>
@@ -1319,10 +1364,10 @@ namespace FastColoredTextBoxNS
 
 
         [Browsable(false)]
-        public FindForm findForm { get; private set; }
+        public FindForm FindDialogForm { get; private set; }
 
         [Browsable(false)]
-        public ReplaceForm replaceForm { get; private set; }
+        public ReplaceForm ReplaceDialogForm { get; private set; }
 
         /// <summary>
         /// Do not change this property
@@ -2322,6 +2367,8 @@ namespace FastColoredTextBoxNS
                 HighlightBrackets(LeftBracket, RightBracket, ref leftBracketPosition, ref rightBracketPosition);
             if (LeftBracket2 != '\x0' && RightBracket2 != '\x0')
                 HighlightBrackets(LeftBracket2, RightBracket2, ref leftBracketPosition2, ref rightBracketPosition2);
+            if (LeftBracket3 != '\x0' && RightBracket3 != '\x0')
+                HighlightBrackets(LeftBracket3, RightBracket3, ref leftBracketPosition3, ref rightBracketPosition3);
             //remember last visit time
             if (Selection.IsEmpty && Selection.Start.iLine < LinesCount)
             {
@@ -2418,17 +2465,17 @@ namespace FastColoredTextBoxNS
         /// </summary>
         public virtual void ShowFindDialog(string findText)
         {
-            if (findForm == null)
-                findForm = new FindForm(this);
+            if (FindDialogForm == null)
+                FindDialogForm = new FindForm(this);
 
             if (findText != null)
-                findForm.tbFind.Text = findText;
+                FindDialogForm.tbFind.Text = findText;
             else if (!Selection.IsEmpty && Selection.Start.iLine == Selection.End.iLine)
-                findForm.tbFind.Text = Selection.Text;
+                FindDialogForm.tbFind.Text = Selection.Text;
 
-            findForm.tbFind.SelectAll();
-            findForm.Show();
-            findForm.Focus();
+            FindDialogForm.tbFind.SelectAll();
+            FindDialogForm.Show();
+            FindDialogForm.Focus();
         }
 
         /// <summary>
@@ -2446,17 +2493,17 @@ namespace FastColoredTextBoxNS
         {
             if (ReadOnly)
                 return;
-            if (replaceForm == null)
-                replaceForm = new ReplaceForm(this);
+            if (ReplaceDialogForm == null)
+                ReplaceDialogForm = new ReplaceForm(this);
 
             if (findText != null)
-                replaceForm.tbFind.Text = findText;
+                ReplaceDialogForm.tbFind.Text = findText;
             else if (!Selection.IsEmpty && Selection.Start.iLine == Selection.End.iLine)
-                replaceForm.tbFind.Text = Selection.Text;
+                ReplaceDialogForm.tbFind.Text = Selection.Text;
 
-            replaceForm.tbFind.SelectAll();
-            replaceForm.Show();
-            replaceForm.Focus();
+            ReplaceDialogForm.tbFind.SelectAll();
+            ReplaceDialogForm.Show();
+            ReplaceDialogForm.Focus();
         }
 
         /// <summary>
@@ -3652,10 +3699,17 @@ namespace FastColoredTextBoxNS
                     break;
 
                 case FCTBAction.FindNext:
-                    if (findForm == null || findForm.tbFind.Text == "")
+                    if (FindDialogForm == null || FindDialogForm.tbFind.Text == string.Empty)
                         ShowFindDialog();
                     else
-                        findForm.FindNext(findForm.tbFind.Text);
+                        FindDialogForm.FindNext(FindDialogForm.tbFind.Text, true);
+                    break;
+
+                case FCTBAction.FindPrevious:
+                    if (FindDialogForm == null || FindDialogForm.tbFind.Text == string.Empty)
+                        ShowFindDialog();
+                    else
+                        FindDialogForm.FindPrevious(FindDialogForm.tbFind.Text, true);
                     break;
 
                 case FCTBAction.ReplaceDialog:
@@ -4262,6 +4316,44 @@ namespace FastColoredTextBoxNS
             var lowerCase = SelectedText.ToLower();
             var r = new Regex(@"(^\S)|[\.\?!:]\s+(\S)", RegexOptions.ExplicitCapture);
             SelectedText = r.Replace(lowerCase, s => s.Value.ToUpper());
+            Selection.Start = old.Start;
+            Selection.End = old.End;
+        }
+
+        /// <summary>
+        /// Convert selected text to random case
+        /// </summary>
+        public virtual void RandomCase()
+        {
+            Range old = Selection.Clone();
+            Random ran = new Random();
+            string s = string.Empty;
+            for (int i = 0; i < SelectedText.Length; i++)
+            {
+                char c = SelectedText[i];
+                if (char.IsLetter(c))
+                    s += ran.NextDouble() >= 0.5 ? char.ToUpper(c) : char.ToLower(c);
+                else
+                    s += c;
+            }
+            SelectedText = s;
+            Selection.Start = old.Start;
+            Selection.End = old.End;
+        }
+
+        /// <summary>
+        /// Convert selected text to inverted case
+        /// </summary>
+        public virtual void InvertCase()
+        {
+            Range old = Selection.Clone();
+            string s = string.Empty;
+            for (int i = 0; i < SelectedText.Length; i++)
+            {
+                char c = SelectedText[i];
+                s += char.IsUpper(c) ? char.ToLower(c) : char.ToUpper(c);
+            }
+            SelectedText = s;
             Selection.Start = old.Start;
             Selection.End = old.End;
         }
@@ -5161,6 +5253,11 @@ namespace FastColoredTextBoxNS
             {
                 BracketsStyle2.Draw(e.Graphics, PlaceToPoint(leftBracketPosition2.Start), leftBracketPosition2);
                 BracketsStyle2.Draw(e.Graphics, PlaceToPoint(rightBracketPosition2.Start), rightBracketPosition2);
+            }
+            if (BracketsStyle3 != null && leftBracketPosition3 != null && rightBracketPosition3 != null)
+            {
+                BracketsStyle3.Draw(e.Graphics, PlaceToPoint(leftBracketPosition3.Start), leftBracketPosition3);
+                BracketsStyle3.Draw(e.Graphics, PlaceToPoint(rightBracketPosition3.Start), rightBracketPosition3);
             }
             //
             e.Graphics.SmoothingMode = SmoothingMode.None;
@@ -6312,6 +6409,19 @@ namespace FastColoredTextBoxNS
         }
 
         /// <summary>
+        /// Get the visible range + additional lines above and below
+        /// </summary>
+        /// <param name="extendByLines">Number of additional lines</param>
+        /// <returns>Range</returns>
+        public Range GetExtendedVisibleRange(int extendByLines = 200)
+        {
+            return GetRange(
+                new Place(0, Math.Max(VisibleRange.Start.iLine - extendByLines, 0)),
+                new Place(0, Math.Min(VisibleRange.End.iLine + extendByLines, LinesCount - 1))
+                );
+        }
+
+        /// <summary>
         /// Get range of text
         /// </summary>
         /// <param name="fromPos">Absolute start position</param>
@@ -7086,6 +7196,8 @@ namespace FastColoredTextBoxNS
             rightBracketPosition = null;
             leftBracketPosition2 = null;
             rightBracketPosition2 = null;
+            leftBracketPosition3 = null;
+            rightBracketPosition3 = null;
         }
 
         /// <summary>
@@ -7260,6 +7372,54 @@ namespace FastColoredTextBoxNS
             return true;
         }
 
+        /// <summary>
+        /// Automatically detects the <see cref="FastColoredTextBoxNS.Language"/> based on 
+        /// the text contents of the textbox. This method does not set the <see cref="Language"/>
+        /// property of the textbox.
+        /// </summary>
+        /// <returns>
+        /// The detected <see cref="FastColoredTextBoxNS.Language"/>
+        /// </returns>
+        public Language AutoDetectLanguage()
+        {
+            string line1 = GetFirstNonEmptyLine().Trim();
+
+            if (line1.Length == 0) return Language.PlainText;
+
+            var ignoreCase = RegexOptions.IgnoreCase;
+
+            if (Regex.IsMatch(line1, @"^<\s*[!]\s*doctype\s+html\b"         , ignoreCase)) return Language.HTML;
+            if (Regex.IsMatch(line1, @"^<\s*[?]\s*xml\b"                    , ignoreCase)) return Language.XML;
+            if (Regex.IsMatch(line1, @"^<\s*[?]\s*php\b"                    , ignoreCase)) return Language.PHP;
+            if (Regex.IsMatch(line1, @"^using\s+[\w\.]+;"                               )) return Language.CSharp;
+            if (Regex.IsMatch(line1, @"^#region\s+"                                     )) return Language.CSharp;
+            if (Regex.IsMatch(line1, @"^Imports\s+[\w.]+"                   , ignoreCase)) return Language.VB;
+            if (Regex.IsMatch(line1, @"^Module\s+[\w]+"                     , ignoreCase)) return Language.VB;
+            if (Regex.IsMatch(line1, @"^import\s+(\w+|[{].+[}])\s*from\b"               )) return Language.JS;
+            if (Regex.IsMatch(line1, @"^import\s+[\w.]+\s*;"                            )) return Language.Java;
+            if (Regex.IsMatch(line1, @"^from\s+[\w]+\s+import\b"                        )) return Language.Python;
+            if (line1[0] == '{')                                                           return Language.JSON;
+
+            return Language.PlainText;
+        }
+
+        public string GetFirstNonEmptyLine()
+        {
+            foreach (string line in Lines)
+            {
+                if (string.IsNullOrEmpty(line.Trim()))
+                {
+                    continue;
+                }
+                else
+                {
+                    return line;
+                }
+            }
+
+            return string.Empty;
+        }
+
         public virtual void OnSyntaxHighlight(TextChangedEventArgs args)
         {
             #if debug
@@ -7361,7 +7521,7 @@ namespace FastColoredTextBoxNS
 
         protected virtual string PrepareHtmlText(string s)
         {
-            return s.Replace("<", "&lt;").Replace(">", "&gt;").Replace("&", "&amp;");
+            return s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
         }
 
         private void wb_StatusTextChanged(object sender, EventArgs e)
@@ -7454,11 +7614,11 @@ window.status = ""#print"";
                 timer2.Dispose();
                 middleClickScrollingTimer.Dispose();
 
-                if (findForm != null)
-                    findForm.Dispose();
+                if (FindDialogForm != null)
+                    FindDialogForm.Dispose();
 
-                if (replaceForm != null)
-                    replaceForm.Dispose();
+                if (ReplaceDialogForm != null)
+                    ReplaceDialogForm.Dispose();
                 /*
                 if (Font != null)
                     Font.Dispose();

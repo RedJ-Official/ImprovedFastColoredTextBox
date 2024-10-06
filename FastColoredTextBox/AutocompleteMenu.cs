@@ -195,6 +195,13 @@ namespace FastColoredTextBoxNS
             set { Items.toolTip = value; }
         }
 
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            Select();
+            Focus();
+        }
+
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
